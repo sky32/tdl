@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/iyear/tdl/app/chat"
+	"github.com/iyear/tdl/pkg/consts"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"os"
@@ -59,7 +60,7 @@ type Configuration struct {
 
 func LoadConfig() error {
 	configFileName := "config.yaml"
-	configDir := "."
+	configDir := consts.DataDir
 	configFilePath := filepath.Join(configDir, configFileName)
 
 	// Check if the config file exists and create it if necessary
