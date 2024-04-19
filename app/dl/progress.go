@@ -36,6 +36,7 @@ func newProgress(p pw.Writer, it *iter, opts Options) *progress {
 }
 
 func (p *progress) OnAdd(elem downloader.Elem) {
+	WatchBegin(elem)
 	tracker := prog.AppendTracker(p.pw, utils.Byte.FormatBinaryBytes, p.processMessage(elem), elem.File().Size())
 	p.trackers.Store(elem.(*iterElem).id, tracker)
 }
@@ -73,6 +74,7 @@ func (p *progress) OnDone(elem downloader.Elem, err error) {
 		return
 	}
 
+	WatchEnd(elem)
 	p.it.Finish(e.id)
 
 	if err := p.donePost(e); err != nil {

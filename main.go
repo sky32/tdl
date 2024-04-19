@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/iyear/tdl/pkg/config"
+	"log"
 	"os"
 	"os/signal"
 
@@ -21,7 +23,10 @@ func main() {
 		bbolt.ErrTimeout:        "Current database is used by another process, please terminate it first",
 		surveyterm.InterruptErr: "Interrupted",
 	}
-
+	err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
 	if err := cmd.New().ExecuteContext(ctx); err != nil {
 		for e, m := range humanizeErrors {
 			if errors.Is(err, e) {

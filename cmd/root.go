@@ -79,7 +79,8 @@ func New() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewVersion(), NewLogin(), NewDownload(), NewForward(),
-		NewChat(), NewUpload(), NewBackup(), NewRecover(), NewMigrate(), NewGen())
+		NewChat(), NewUpload(), NewBackup(), NewRecover(), NewMigrate(), NewGen(),
+		NewWatch())
 
 	cmd.PersistentFlags().StringToString(consts.FlagStorage,
 		DefaultBoltStorage,
