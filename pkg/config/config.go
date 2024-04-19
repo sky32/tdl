@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/iyear/tdl/app/chat"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -61,13 +62,15 @@ func LoadConfig() error {
 	configDir := "."
 	configFilePath := filepath.Join(configDir, configFileName)
 
+	// Check if the config file exists and create it if necessary
 	if _, err := os.Stat(configFilePath); err != nil {
 		if os.IsNotExist(err) {
 			_, _ = os.Create(configFilePath)
-			fmt.Printf("Config file %s not found, creating a new one...\n", configFilePath)
+			color.Yellow("Config file %s not found, creating a new one...\n", configFilePath)
 		}
 	}
 
+	// Configure viper and set default values
 	viper.SetConfigName(filepath.Base(configFileName))
 	viper.AddConfigPath(configDir)
 	viper.SetConfigType(filepath.Ext(configFileName)[1:])
@@ -86,14 +89,12 @@ func LoadConfig() error {
 	viper.SetDefault("watch.export.restart", false)
 	viper.SetDefault("watch.interval", 10)
 
+	// Read the config file
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	if err := viper.Unmarshal(&Config); err != nil {
-		return fmt.Errorf("failed to unmarshal config: %w", err)
-	}
-
+	// Unmarshal the config using custom decode hooks
 	var decodeHook mapstructure.DecodeHookFunc = func(from, to reflect.Type, v interface{}) (interface{}, error) {
 		if from.Kind() == reflect.String && to == reflect.TypeOf(time.Time{}) {
 			return time.Parse(time.RFC3339, v.(string))
@@ -109,6 +110,7 @@ func LoadConfig() error {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
+	// Start watching for config file changes
 	viper.WatchConfig()
 
 	return nil

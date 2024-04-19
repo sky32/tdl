@@ -25,7 +25,12 @@ func GetWatchList() *cobra.Command {
 		Use:   "ls",
 		Short: "Get your watched chats",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return watch.GetList(logger.Named(cmd.Context(), "ls"))
+			log := logger.Named(cmd.Context(), "ls")
+			err := watch.GetList(log)
+			if err != nil {
+				return err
+			}
+			return nil
 		},
 	}
 
@@ -38,9 +43,14 @@ func AddWatch() *cobra.Command {
 		Use:   "add",
 		Short: "Add new watch to chats",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return tRun(cmd.Context(), func(ctx context.Context, c *telegram.Client, kvd kv.KV) error {
-				return watch.Add(logger.Named(ctx, "add"), c, kvd, opts)
+			log := logger.Named(cmd.Context(), "add")
+			err := tRun(cmd.Context(), func(ctx context.Context, c *telegram.Client, kvd kv.KV) error {
+				return watch.Add(log, c, kvd, opts)
 			}, limiter)
+			if err != nil {
+				return err
+			}
+			return nil
 		},
 	}
 
@@ -54,9 +64,14 @@ func RunWatch() *cobra.Command {
 		Use:   "run",
 		Short: "Run watch download",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return tRun(cmd.Context(), func(ctx context.Context, c *telegram.Client, kvd kv.KV) error {
-				return watch.Run(logger.Named(ctx, "run"), c, kvd)
+			log := logger.Named(cmd.Context(), "run")
+			err := tRun(cmd.Context(), func(ctx context.Context, c *telegram.Client, kvd kv.KV) error {
+				return watch.Run(log, c, kvd)
 			}, limiter)
+			if err != nil {
+				return err
+			}
+			return nil
 		},
 	}
 

@@ -2,7 +2,6 @@ package watch
 
 import (
 	"context"
-	"fmt"
 	"github.com/fatih/color"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/peers"
@@ -17,24 +16,41 @@ import (
 )
 
 func Add(ctx context.Context, c *telegram.Client, kvd kv.KV, opts AddOptions) error {
+	color.Green("Adding chat\n")
 	log := logger.From(ctx)
 
 	var peer peers.Peer
 	var err error
+
+	// Log the start of the Add operation
+	log.Info("Starting to add chat", zap.String("chat_id", opts.ChatId))
+
 	manager := peers.Options{Storage: storage.NewPeers(kvd)}.Build(c.API())
-	if opts.ChatId == "me" { // defaults to me(saved messages)
+
+	// Handle 'me' as a special case
+	if opts.ChatId == "me" {
 		peer, err = manager.Self(ctx)
-		log.Info("Get me", zap.Any("peer", peer))
-	} else {
-		if isChatIdPresent(opts.ChatId, config.Config) {
-			return fmt.Errorf("chat_id %s already exists", opts.ChatId)
+		if err != nil {
+			log.Error("Failed to get self", zap.Error(err))
+			return err
 		}
+		log.Info("Got self", zap.Any("peer", peer))
+	} else {
 		peer, err = utils.Telegram.GetInputPeer(ctx, manager, opts.ChatId)
-		log.Info("Get chat", zap.Any("peer", peer), zap.Any("chat_id", opts.ChatId))
+		if err != nil {
+			log.Error("Failed to get input peer", zap.String("chat_id", opts.ChatId), zap.Error(err))
+			return err
+		}
+		log.Info("Got input peer", zap.Any("peer", peer), zap.String("chat_id", opts.ChatId))
 	}
-	if err != nil {
-		return err
+	// Check if the chat ID already exists in the configuration
+	if isChatIdPresent(strconv.FormatInt(peer.ID(), 10), config.Config) {
+		log.Warn("Chat ID already exists in the configuration", zap.String("chat_id", opts.ChatId))
+		color.Red("chat_id %s already exists\n", opts.ChatId)
+		return nil
 	}
+
+	// Create a new watch chat configuration
 	chat := config.WatchChat{
 		Type:          1,
 		Chat:          strconv.FormatInt(peer.ID(), 10),
@@ -49,16 +65,19 @@ func Add(ctx context.Context, c *telegram.Client, kvd kv.KV, opts AddOptions) er
 		Name:          peer.VisibleName(),
 		PreTemplate:   cleanFolderName(peer.VisibleName()),
 	}
-	config.Config.Watch.Chats = append(
-		config.Config.Watch.Chats,
-		chat,
-	)
+
+	// Append the new chat to the configuration and save it
+	config.Config.Watch.Chats = append(config.Config.Watch.Chats, chat)
 	err = config.SaveConfig()
 	if err != nil {
+		log.Error("Failed to save configuration", zap.Error(err))
 		return err
 	}
-	log.Info("Add chat", zap.Any("peer", peer), zap.Any("chat", chat))
+	log.Info("Added chat to configuration", zap.Any("peer", peer), zap.Any("chat", chat))
+
+	// Log the successful completion of the Add operation
 	color.Green("Add chat %s[%s] success...\n", chat.Name, chat.Chat)
+	log.Info("Successfully added chat", zap.String("name", chat.Name), zap.String("chat_id", chat.Chat))
 
 	return nil
 }
