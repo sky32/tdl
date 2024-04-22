@@ -39,14 +39,14 @@ func GetList(ctx context.Context) error {
 func printTable(result []config.WatchChat) {
 	fmt.Printf("\nWatch Chats:\n%s %s %s %s\n",
 		trunc("ID", 15),
-		trunc("Name", 30),
+		trunc("Name", 50),
 		trunc("LastId", 15),
 		trunc("PreTemplate", 100),
 	)
 	for _, r := range result {
-		fmt.Printf("%s %s %s\n",
+		fmt.Printf("%s %s %s %s\n",
 			trunc(r.Chat, 15),
-			trunc(r.Name, 30),
+			trunc(r.Name, 50),
 			trunc(strconv.Itoa(r.LastId), 15),
 			trunc(r.PreTemplate, 100),
 		)
