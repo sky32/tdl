@@ -42,7 +42,7 @@ func setWatchDefault() {
 	viper.SetDefault("watch.export.dir", "downloads")
 	viper.SetDefault("watch.export.rewriteExt", false)
 	viper.SetDefault("watch.export.skipSame", false)
-	viper.SetDefault("watch.export.template", "{{ .DialogID }}/{{ formatDate .MessageDate \"2006-01-02\"}}/{{ .MessageID }}_{{ .FileName  }}")
+	viper.SetDefault("watch.export.template", "{{ .DialogID }}/{{ formatDate .MessageDate \"2006-01\"}}/{{ .MessageID }}_{{ .FileName  }}")
 	viper.SetDefault("watch.export.URLs", []string{})
 	viper.SetDefault("watch.export.files", []string{})
 	viper.SetDefault("watch.export.include", []string{})
