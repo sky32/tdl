@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"text/template"
 	"time"
@@ -186,6 +187,7 @@ func (i *iter) process(ctx context.Context) (ret bool, skip bool) {
 		i.err = errors.Wrap(err, "execute template")
 		return false, false
 	}
+	toName = *bytes.NewBufferString(fixToNameLen(toName.String()))
 
 	if i.opts.SkipSame {
 		if stat, err := os.Stat(filepath.Join(i.opts.Dir, toName.String())); err == nil {
@@ -224,6 +226,27 @@ func (i *iter) process(ctx context.Context) (ret bool, skip bool) {
 	}
 
 	return true, false
+}
+
+func fixToNameLen(name string) string {
+	replaceName := strings.Map(func(r rune) rune {
+		switch r {
+		case ' ', '\\', '/', '<', '>', ':', '"', '|', '?', '*', '\n', '\r':
+			return '_'
+		default:
+			return r
+		}
+	}, name)
+	maxNameLength := 255
+	baseName := filepath.Base(replaceName)
+	ext := filepath.Ext(baseName)
+	extLength := len(ext)
+	baseNameWithoutExt := baseName[:len(baseName)-extLength]
+	if totalLength := len(baseNameWithoutExt) + extLength; totalLength <= maxNameLength {
+		return replaceName
+	}
+
+	return strings.TrimSuffix(replaceName, baseName) + baseNameWithoutExt[:maxNameLength-extLength] + ext
 }
 
 func (i *iter) Value() downloader.Elem {
